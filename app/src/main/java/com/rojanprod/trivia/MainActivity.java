@@ -49,13 +49,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         nextButton.setOnClickListener(this);
         prevButton.setOnClickListener(this);
 
+        /* This method is used to get the Question Array list from the Json request and
+         *  its address is copied to another array list variable and some initial operations are performed here
+         */
         questionList = new QuestionBank().getQuestions(new AsyncQuestionList() {
             @SuppressLint("DefaultLocale")
             @Override
             public void processFinished(ArrayList<Question> questionArrayList) {
 
                 questionText.setText(questionArrayList.get(questionIndexCounter).getQuestionName());
-                queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionArrayList.size()));
+                queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionArrayList.size()-1));
                 correctNumText.setText(String.format("Correct: %d",correctCounter));
 
                 //Log.d("Inside Finish", "processFinished: " + questionArrayList);
@@ -65,6 +68,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    /** This method defines the behaviour of the buttons
+     * When the buttons are clicked different methods are called and different behaviour is performed
+     */
     @Override
     public void onClick(View v) {
 
@@ -86,39 +92,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /** This method is used to check whether the answer is correct or not
+     * If the answer is wrong then certain operations are performed and else it is correct then different
+     * operations are performed like changing question and updating the correct answer parameter
+     */
     @SuppressLint("DefaultLocale")
-    public void answerUpdate(boolean ans){
-        if(questionList.get(questionIndexCounter).isAnswer()!=ans)
+    private void answerUpdate(boolean ans){
+        if(questionList.get(questionIndexCounter).isAnswer()==ans)
         {
-            Toast.makeText(MainActivity.this,"Wrong Answer!",Toast.LENGTH_SHORT).show();
-            questionIndexCounter = questionIndexCounter % questionList.size() + 1;
-            questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
-
-        }else{
-
-            Toast.makeText(MainActivity.this,"Correct Answer!",Toast.LENGTH_SHORT).show();
-            questionIndexCounter = questionIndexCounter % questionList.size() + 1;
+            Toast.makeText(MainActivity.this,"Correct!",Toast.LENGTH_SHORT).show();
             correctCounter++;
-            correctNumText.setText(String.format("Correct: %d", correctCounter));
-            questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
+            correctNumText.setText(String.format("Correct: %d",correctCounter));
+            updateQuestion();
+        }else{
+            Toast.makeText(MainActivity.this,"Wrong!",Toast.LENGTH_SHORT).show();
+            updateQuestion();
         }
 
     }
 
-    @SuppressLint("DefaultLocale")
-    public void nextQueUpdate(){
+    /** nextQueUpdate() is a method used to change the question when the next button is pressed.
+     * This method changes the question to next counter and makes Toast if the question list reaches the last question
+     */
+    private void nextQueUpdate(){
 
-        if(questionIndexCounter!=questionList.size()){
-            questionIndexCounter++;
-            questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
-            queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
+        if(questionIndexCounter!=(questionList.size())){
+            updateQuestion();
         }else
             Toast.makeText(MainActivity.this,"No more Questions!",Toast.LENGTH_SHORT).show();
 
     }
 
+    /** prevQueUpdate() method is used to change the question to previous question.
+     * When the previous button is clicked then the previous question is shown and the question counter is decreased
+     * When the question index reaches to 0 then there are no previous question
+     */
     @SuppressLint("DefaultLocale")
-    public void prevQueUpdate(){
+    private void prevQueUpdate(){
         if(questionIndexCounter>0){
             questionIndexCounter--;
             questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
@@ -126,5 +136,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }else
             Toast.makeText(MainActivity.this,"No previous Questions!",Toast.LENGTH_SHORT).show();
     }
+
+    /** This method is used to update question i.e this method is used for increment of the question Index counter
+     * and the text is set to questionText field using the Index counter to follow question number
+     */
+    @SuppressLint("DefaultLocale")
+    private void updateQuestion()
+    {
+        questionIndexCounter = (questionIndexCounter+1) % questionList.size();
+        questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
+        queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
+    }
+
+
 
 }
