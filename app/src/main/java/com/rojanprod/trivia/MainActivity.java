@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton nextButton;
     private ImageButton prevButton;
     private TextView queCounter;
+    private TextView correctNumText;
+    private int correctCounter = 0;
     private int questionIndexCounter = 0;
     List<Question> questionList;
 
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         nextButton = findViewById(R.id.nextButton);
         prevButton = findViewById(R.id.prevButton);
         queCounter = findViewById(R.id.queCounter);
+        correctNumText = findViewById(R.id.correctAnswers);
 
         trueButton.setOnClickListener(this);
         falseButton.setOnClickListener(this);
@@ -53,7 +56,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 questionText.setText(questionArrayList.get(questionIndexCounter).getQuestionName());
                 queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionArrayList.size()));
-                Log.d("Inside Finish", "processFinished: " + questionArrayList);
+                correctNumText.setText(String.format("Correct: %d",correctCounter));
+
+                //Log.d("Inside Finish", "processFinished: " + questionArrayList);
 
             }
         });
@@ -66,8 +71,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(v.getId())
         {
             case R.id.true_button:
+                answerUpdate(true);
+                break;
             case R.id.false_button:
-                answerUpdate();
+                answerUpdate(false);
                 break;
             case R.id.nextButton:
                 nextQueUpdate();
@@ -79,8 +86,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void answerUpdate(){
+    @SuppressLint("DefaultLocale")
+    public void answerUpdate(boolean ans){
+        if(questionList.get(questionIndexCounter).isAnswer()!=ans)
+        {
+            Toast.makeText(MainActivity.this,"Wrong Answer!",Toast.LENGTH_SHORT).show();
+            questionIndexCounter = questionIndexCounter % questionList.size() + 1;
+            questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
 
+        }else{
+
+            Toast.makeText(MainActivity.this,"Correct Answer!",Toast.LENGTH_SHORT).show();
+            questionIndexCounter = questionIndexCounter % questionList.size() + 1;
+            correctCounter++;
+            correctNumText.setText(String.format("Correct: %d", correctCounter));
+            questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
+        }
 
     }
 
