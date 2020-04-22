@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Trivia</string>
+    <string name="trivia">Trivia</string>
+    <string name="que">Here Question fetched from the Request will be held</string>
+    <string name="false_button">False</string>
+    <string name="true_button">True</string>
+    <string name="previous_button">previous button</string>
+    <string name="next_button">next button</string>
+    <string name="queCounter_text">0 of total</string>
 </resources>
