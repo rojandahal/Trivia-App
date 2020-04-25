@@ -1,11 +1,14 @@
 package com.rojanprod.trivia;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -68,7 +71,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    /** This method defines the behaviour of the buttons
+    /**
+     * This method defines the behaviour of the buttons
      * When the buttons are clicked different methods are called and different behaviour is performed
      */
     @Override
@@ -83,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 answerUpdate(false);
                 break;
             case R.id.nextButton:
-                nextQueUpdate();
+                    nextQueUpdate();
                 break;
             case R.id.prevButton:
                 prevQueUpdate();
@@ -92,7 +96,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /** This method is used to check whether the answer is correct or not
+    /**
+     * This method is used to check whether the answer is correct or not
      * If the answer is wrong then certain operations are performed and else it is correct then different
      * operations are performed like changing question and updating the correct answer parameter
      */
@@ -106,24 +111,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             updateQuestion();
         }else{
             Toast.makeText(MainActivity.this,"Wrong!",Toast.LENGTH_SHORT).show();
+            shakeAnimation();
             updateQuestion();
         }
 
     }
 
-    /** nextQueUpdate() is a method used to change the question when the next button is pressed.
+    /**
+     * nextQueUpdate() is a method used to change the question when the next button is pressed.
      * This method changes the question to next counter and makes Toast if the question list reaches the last question
      */
     private void nextQueUpdate(){
 
-        if(questionIndexCounter!=(questionList.size())){
+        if (questionIndexCounter != (questionList.size())) {
             updateQuestion();
         }else
-            Toast.makeText(MainActivity.this,"No more Questions!",Toast.LENGTH_SHORT).show();
-
+            Toast.makeText(MainActivity.this, "No more Questions!", Toast.LENGTH_SHORT).show();
     }
 
-    /** prevQueUpdate() method is used to change the question to previous question.
+    /**
+     * prevQueUpdate() method is used to change the question to previous question.
      * When the previous button is clicked then the previous question is shown and the question counter is decreased
      * When the question index reaches to 0 then there are no previous question
      */
@@ -137,7 +144,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(MainActivity.this,"No previous Questions!",Toast.LENGTH_SHORT).show();
     }
 
-    /** This method is used to update question i.e this method is used for increment of the question Index counter
+    /**
+     * This method is used to update question i.e this method is used for increment of the question Index counter
      * and the text is set to questionText field using the Index counter to follow question number
      */
     @SuppressLint("DefaultLocale")
@@ -148,6 +156,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
     }
 
+    /**
+     * This method is used to set shaking animation to the card view of the question displaying text
+     */
+    private void shakeAnimation()
+    {
+        Animation shake = AnimationUtils.loadAnimation(MainActivity.this,
+                R.anim.shake_animation);
+        CardView cardView = findViewById(R.id.cardView);
+        cardView.setAnimation(shake);
+
+    }
 
 
 }
