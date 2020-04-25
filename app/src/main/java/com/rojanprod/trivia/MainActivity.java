@@ -4,9 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -108,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(MainActivity.this,"Correct!",Toast.LENGTH_SHORT).show();
             correctCounter++;
             correctNumText.setText(String.format("Correct: %d",correctCounter));
+            fadeAnimation();
             updateQuestion();
         }else{
             Toast.makeText(MainActivity.this,"Wrong!",Toast.LENGTH_SHORT).show();
@@ -124,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void nextQueUpdate(){
 
         if (questionIndexCounter != (questionList.size())) {
+            questionIndexCounter = (questionIndexCounter+1) % questionList.size();
             updateQuestion();
         }else
             Toast.makeText(MainActivity.this, "No more Questions!", Toast.LENGTH_SHORT).show();
@@ -151,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @SuppressLint("DefaultLocale")
     private void updateQuestion()
     {
-        questionIndexCounter = (questionIndexCounter+1) % questionList.size();
         questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
         queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
     }
@@ -163,9 +166,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         Animation shake = AnimationUtils.loadAnimation(MainActivity.this,
                 R.anim.shake_animation);
-        CardView cardView = findViewById(R.id.cardView);
+        final CardView cardView = findViewById(R.id.cardView);
         cardView.setAnimation(shake);
 
+        shake.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                cardView.setCardBackgroundColor(Color.RED);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                cardView.setCardBackgroundColor(Color.WHITE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+    }
+
+    /**
+     * This method is used to set fadeAnimation which uses AlphaAnimation class of java
+     * Currently this method sets the cardView to green for 200ms when correct answer is pressed
+     */
+
+    private void fadeAnimation(){
+        AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f,0.0f);
+        final CardView cardView = findViewById(R.id.cardView);
+
+        alphaAnimation.setDuration(200);
+        alphaAnimation.setRepeatMode(Animation.REVERSE);
+        alphaAnimation.setRepeatCount(1);
+        cardView.setAnimation(alphaAnimation);
+
+        alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                cardView.setCardBackgroundColor(Color.GREEN);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                cardView.setCardBackgroundColor(Color.WHITE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
     }
 
 
