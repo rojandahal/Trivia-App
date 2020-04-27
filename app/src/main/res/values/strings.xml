@@ -7,4 +7,5 @@
     <string name="previous_button">previous button</string>
     <string name="next_button">next button</string>
     <string name="queCounter_text">0 of total</string>
+    <string name="highest_score">Highest:</string>
 </resources>

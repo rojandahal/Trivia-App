@@ -1,9 +1,11 @@
 package com.rojanprod.trivia;
 
+import androidx.annotation.LongDef;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,6 +27,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final String MESSAGE_ID = "message";
     private TextView questionText;
     private Button trueButton;
     private Button falseButton;
@@ -34,10 +37,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView correctNumText;
     private int correctCounter = 0;
     private int questionIndexCounter = 0;
+    private TextView highestScore;
+    private int highScore = 0;
     List<Question> questionList;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -48,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         prevButton = findViewById(R.id.prevButton);
         queCounter = findViewById(R.id.queCounter);
         correctNumText = findViewById(R.id.correctAnswers);
+        highestScore = findViewById(R.id.highest_score);
 
         trueButton.setOnClickListener(this);
         falseButton.setOnClickListener(this);
@@ -65,12 +71,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 questionText.setText(questionArrayList.get(questionIndexCounter).getQuestionName());
                 queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionArrayList.size()-1));
                 correctNumText.setText(String.format("Correct: %d",correctCounter));
-
                 //Log.d("Inside Finish", "processFinished: " + questionArrayList);
 
+                SharedPreferences sharedData = getSharedPreferences(MESSAGE_ID,MODE_PRIVATE);
+                String value = sharedData.getString("score","Highest: 0");
+                highestScore.setText(String.format("Highest: %s", value));
+                highScore = Integer.parseInt(value);
             }
         });
-
     }
 
     /**
@@ -107,13 +115,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void answerUpdate(boolean ans){
         if(questionList.get(questionIndexCounter).isAnswer()==ans)
         {
-            Toast.makeText(MainActivity.this,"Correct!",Toast.LENGTH_SHORT).show();
+//            Toast.makeText(MainActivity.this,"Correct!",Toast.LENGTH_SHORT).show();
             correctCounter++;
             correctNumText.setText(String.format("Correct: %d",correctCounter));
             fadeAnimation();
             updateQuestion();
         }else{
-            Toast.makeText(MainActivity.this,"Wrong!",Toast.LENGTH_SHORT).show();
+//            Toast.makeText(MainActivity.this,"Wrong!",Toast.LENGTH_SHORT).show();
             shakeAnimation();
             updateQuestion();
         }
@@ -126,8 +134,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void nextQueUpdate(){
 
-        if (questionIndexCounter != (questionList.size())) {
-            questionIndexCounter = (questionIndexCounter+1) % questionList.size();
+        if (questionIndexCounter != (questionList.size()-1)) {
+            questionIndexCounter++;
             updateQuestion();
         }else
             Toast.makeText(MainActivity.this, "No more Questions!", Toast.LENGTH_SHORT).show();
@@ -157,6 +165,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
         queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
+        if(correctCounter >= highScore) {
+            highScore = correctCounter;
+            highestScore.setText(String.format("Highest: %d", correctCounter));
+        }
+
     }
 
     /**
@@ -219,5 +232,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        SharedPreferences sharedPreferences = getSharedPreferences(MESSAGE_ID,MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("score", String.valueOf(highScore));
+        editor.apply();     //This is used to save the current preference of the highest score
+        Log.d("ActivityTracker", "onStop: " + highScore);
+    }
 
 }

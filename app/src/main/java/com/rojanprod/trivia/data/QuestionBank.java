@@ -1,13 +1,12 @@
 package com.rojanprod.trivia.data;
 
-import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.rojanprod.trivia.controller.AppController;
 import com.rojanprod.trivia.model.Question;
-
+import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 
