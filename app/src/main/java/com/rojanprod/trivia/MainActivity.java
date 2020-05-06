@@ -1,11 +1,9 @@
 package com.rojanprod.trivia;
 
-import androidx.annotation.LongDef;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import android.annotation.SuppressLint;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,14 +18,15 @@ import android.widget.Toast;
 
 import com.rojanprod.trivia.data.AsyncQuestionList;
 import com.rojanprod.trivia.data.QuestionBank;
+import com.rojanprod.trivia.model.Prefs;
 import com.rojanprod.trivia.model.Question;
+import com.rojanprod.trivia.model.Score;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String MESSAGE_ID = "message";
     private TextView questionText;
     private Button trueButton;
     private Button falseButton;
@@ -35,16 +34,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton prevButton;
     private TextView queCounter;
     private TextView correctNumText;
-    private int correctCounter = 0;
-    private int questionIndexCounter = 0;
+    private int scoreCounter = 0;
+    private int questionIndexCounter;
     private TextView highestScore;
-    private int highScore = 0;
+    private Score score;
+    private Prefs prefs;
     List<Question> questionList;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        score = new Score();
+        prefs = new Prefs(this);
 
         questionText = findViewById(R.id.questionText);
         trueButton = findViewById(R.id.true_button);
@@ -68,15 +71,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void processFinished(ArrayList<Question> questionArrayList) {
 
+                questionIndexCounter = prefs.getPreferences().getInt("current_que", 0);
                 questionText.setText(questionArrayList.get(questionIndexCounter).getQuestionName());
-                queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionArrayList.size()-1));
-                correctNumText.setText(String.format("Correct: %d",correctCounter));
-                //Log.d("Inside Finish", "processFinished: " + questionArrayList);
+                queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionArrayList.size() - 1));
+                correctNumText.setText(String.format("Correct: %d", score.getScore()));
 
-                SharedPreferences sharedData = getSharedPreferences(MESSAGE_ID,MODE_PRIVATE);
-                String value = sharedData.getString("score","Highest: 0");
+                int value = prefs.getPreferences().getInt("high_score", 0);
                 highestScore.setText(String.format("Highest: %s", value));
-                highScore = Integer.parseInt(value);
+                score.setHighScore(value);
+
+                /* These are the logs for debugging whether the values are properly called or not
+                 * Log.d("Inside Finish", "processFinished: " + questionArrayList);
+                 * Log.d("ActivityTracker", "onCreate: HighScore: " + score.getHighScore());
+                 * Log.d("ActivityTracker", "onCreate: QuestionIndex: " + questionIndexCounter);
+                 */
             }
         });
     }
@@ -84,12 +92,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * This method defines the behaviour of the buttons
      * When the buttons are clicked different methods are called and different behaviour is performed
+     *
+     * @param v
      */
     @Override
     public void onClick(View v) {
 
-        switch(v.getId())
-        {
+        switch (v.getId()) {
             case R.id.true_button:
                 answerUpdate(true);
                 break;
@@ -97,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 answerUpdate(false);
                 break;
             case R.id.nextButton:
-                    nextQueUpdate();
+                nextQueUpdate();
                 break;
             case R.id.prevButton:
                 prevQueUpdate();
@@ -110,18 +119,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * This method is used to check whether the answer is correct or not
      * If the answer is wrong then certain operations are performed and else it is correct then different
      * operations are performed like changing question and updating the correct answer parameter
+     *
+     * @param ans
      */
     @SuppressLint("DefaultLocale")
-    private void answerUpdate(boolean ans){
-        if(questionList.get(questionIndexCounter).isAnswer()==ans)
-        {
-//            Toast.makeText(MainActivity.this,"Correct!",Toast.LENGTH_SHORT).show();
-            correctCounter++;
-            correctNumText.setText(String.format("Correct: %d",correctCounter));
+    private void answerUpdate(boolean ans) {
+        if (questionList.get(questionIndexCounter).isAnswer() == ans) {
+            increaseScore();
+            correctNumText.setText(String.format("Correct: %d", score.getScore()));
             fadeAnimation();
             updateQuestion();
-        }else{
-//            Toast.makeText(MainActivity.this,"Wrong!",Toast.LENGTH_SHORT).show();
+        } else {
             shakeAnimation();
             updateQuestion();
         }
@@ -132,12 +140,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * nextQueUpdate() is a method used to change the question when the next button is pressed.
      * This method changes the question to next counter and makes Toast if the question list reaches the last question
      */
-    private void nextQueUpdate(){
+    private void nextQueUpdate() {
 
-        if (questionIndexCounter != (questionList.size()-1)) {
+        if (questionIndexCounter != (questionList.size() - 1)) {
             questionIndexCounter++;
             updateQuestion();
-        }else
+        } else
             Toast.makeText(MainActivity.this, "No more Questions!", Toast.LENGTH_SHORT).show();
     }
 
@@ -147,13 +155,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * When the question index reaches to 0 then there are no previous question
      */
     @SuppressLint("DefaultLocale")
-    private void prevQueUpdate(){
-        if(questionIndexCounter>0){
+    private void prevQueUpdate() {
+        if (questionIndexCounter > 0) {
             questionIndexCounter--;
             questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
-            queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
-        }else
-            Toast.makeText(MainActivity.this,"No previous Questions!",Toast.LENGTH_SHORT).show();
+            queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionList.size()));
+        } else
+            Toast.makeText(MainActivity.this, "No previous Questions!", Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -161,22 +169,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * and the text is set to questionText field using the Index counter to follow question number
      */
     @SuppressLint("DefaultLocale")
-    private void updateQuestion()
-    {
+    private void updateQuestion() {
         questionText.setText(questionList.get(questionIndexCounter).getQuestionName());
-        queCounter.setText(String.format("%d/%d", questionIndexCounter+1, questionList.size()));
-        if(correctCounter >= highScore) {
-            highScore = correctCounter;
-            highestScore.setText(String.format("Highest: %d", correctCounter));
+        queCounter.setText(String.format("%d/%d", questionIndexCounter + 1, questionList.size()));
+        if (updateHighScore()) {
+            highestScore.setText(String.format("Highest: %s", score.getHighScore()));
         }
-
     }
 
     /**
      * This method is used to set shaking animation to the card view of the question displaying text
      */
-    private void shakeAnimation()
-    {
+    private void shakeAnimation() {
         Animation shake = AnimationUtils.loadAnimation(MainActivity.this,
                 R.anim.shake_animation);
         final CardView cardView = findViewById(R.id.cardView);
@@ -205,8 +209,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Currently this method sets the cardView to green for 200ms when correct answer is pressed
      */
 
-    private void fadeAnimation(){
-        AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f,0.0f);
+    private void fadeAnimation() {
+        AlphaAnimation alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
         final CardView cardView = findViewById(R.id.cardView);
 
         alphaAnimation.setDuration(200);
@@ -232,16 +236,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    /**
+     * This method is used to update the highest score if the current score exceeds it and
+     * it returns a boolean to confirm the action is completed or not
+     *
+     * @return
+     */
+    private boolean updateHighScore() {
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        SharedPreferences sharedPreferences = getSharedPreferences(MESSAGE_ID,MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        editor.putString("score", String.valueOf(highScore));
-        editor.apply();     //This is used to save the current preference of the highest score
-        Log.d("ActivityTracker", "onStop: " + highScore);
+        if (score.getScore() > score.getHighScore()) {
+            score.setHighScore(scoreCounter);
+            return true;
+        }
+        return false;
     }
+
+    /**
+     * This method is used to increase the score in the score.java class where it is saved
+     */
+    private void increaseScore() {
+        scoreCounter++;
+        score.setScore(scoreCounter);
+    }
+
+    /**
+     * This method saves the high score to the preference when the app applies onPause() state
+     * This method saves the current question index when the program stops
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        prefs.saveHighScore(score.getScore());
+        prefs.saveCurrentState(questionIndexCounter);
+
+//        Log.d("ActivityTracker", "onPause: High Score: " + score.getHighScore());
+//        Log.d("ActivityTracker", "onPause: Question Index: " + questionIndexCounter);
+        //Logs for debugging the highScore and question index
+    }
+
+
+
 
 }
